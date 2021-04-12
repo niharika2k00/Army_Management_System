@@ -234,19 +234,19 @@ class Army_schema {
   public Army_schema updateArmyDetails(String NAME, String AGE, String GENDER, String RANK, String DUTY_SITE,
       String PHONE, String ADDRESS) {
     if (!NAME.isBlank())
-      this.name = NAME;
+      name = NAME;
     if (!AGE.isBlank())
-      this.age = AGE;
+      age = AGE;
     if (!GENDER.isBlank())
-      this.gender = GENDER;
+      gender = GENDER;
     if (!RANK.isBlank())
-      this.rank = RANK;
+      rank = RANK;
     if (!DUTY_SITE.isBlank())
-      this.location_zone = DUTY_SITE;
+      location_zone = DUTY_SITE;
     if (!PHONE.isBlank())
-      this.phone_num = PHONE;
+      phone_num = PHONE;
     if (!ADDRESS.isBlank())
-      this.address = ADDRESS;
+      address = ADDRESS;
     return this;
   }
 
@@ -295,7 +295,7 @@ class Database {
       String location_zone, String phone_num, String address) {
 
     // System.out.println("why ur NOT running");
-    return linkedList.get(ID_index).updateArmyDetails(name, age, rank, gender, location_zone, phone_num, address);
+    return linkedList.get(ID_index).updateArmyDetails(name, age, gender, rank, location_zone, phone_num, address);
   }
 
   public Army_schema deleteArmyStorage(int index) {
@@ -307,8 +307,8 @@ class Database {
 
     System.out.println("Length of LinkedList = " + len);
     for (i = 0; i < len; i++) {
-      Army_schema troops = linkedList.get(i);
-      System.out.println(troops.obj_show());
+      Army_schema troop = linkedList.get(i);
+      System.out.println(troop.obj_show());
     }
   }
 
