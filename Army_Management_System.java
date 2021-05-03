@@ -1,8 +1,14 @@
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.io.*;
 import java.util.*;
 import java.util.LinkedList;
 import java.util.Scanner;
+
+import jdk.internal.foreign.Utils;
 
 // MAIN PUBLIC CLASS CONTAINING void main()
 public class Army_Management_System {
@@ -162,32 +168,32 @@ class Main_menu {
 
       boolean shouldExit = false;
       switch (option) {
-      case 1:
-        createArmyRecord();
-        break;
+        case 1:
+          createArmyRecord();
+          break;
 
-      case 2:
-        getArmyById();
-        break;
+        case 2:
+          getArmyById();
+          break;
 
-      case 3:
-        updateArmyDetails();
-        break;
+        case 3:
+          updateArmyDetails();
+          break;
 
-      case 4:
-        deleteArmyDetails();
-        break;
+        case 4:
+          deleteArmyDetails();
+          break;
 
-      case 5:
-        fetchAllArmyDetails();
-        break;
+        case 5:
+          fetchAllArmyDetails();
+          break;
 
-      case 6:
-        shouldExit = true;
-        break;
-      default:
-        System.out.println("Wrong option!");
-        break;
+        case 6:
+          shouldExit = true;
+          break;
+        default:
+          System.out.println("Wrong option!");
+          break;
       }
 
       System.out.println();
@@ -269,47 +275,98 @@ class Army_schema {
 // DATABASE -- using Linked List
 class Database {
 
-  LinkedList<Army_schema> linkedList = new LinkedList<Army_schema>(); // ll of the Army
+  private Connection connection;
   static int index = 0;
 
-  // Database() {index = 1; }
+  Database() {
+    this.connection = getcONN();
+  }
 
-  // Methods For Data Manupulation using LL
-  public Army_schema createArmyStorage(String name, Army_schema army) {
-    if (name.isBlank())
-      return null;
+  public void createUsersTable() {
+    try {
+      String query = "CREATE TABLE IF NOT EXISTS users(id int NOT NULL AUTO_INCREMENT, name varchar(255), age varchar(255), gender varchar(255), rank varchar(255), location varchar(255),phone varchar(255), address varchar(255),PRIMARY KEY(id))";
+      PreparedStatement q = this.connection.prepareStatement(query);
+      q.executeUpdate();
 
-    else {
-      System.out.println("INDEX -> " + index++);
-      linkedList.addLast(/* index++, */ army); // Syntax : add(int index, Object)
-      // System.out.println("running method");
-      return army; // return type - Army_schema
+    } catch (Exception e) {
+      System.out.println(e);
     }
   }
 
-  public Army_schema getArmyByIdStorage(int id) {
-    return linkedList.get(id); // LinkedList.get(int index)
+  // Methods For Data Manupulation using LL
+  public Army_schema createArmyStorage(String name, String age, String gender, String rank, String location_zone,
+      String phone_num, String address) {
+
+    try {
+      if (name.isBlank())
+        return null;
+      else {
+        String query = String.format(
+            "INSERT INTO users(name,age , gender, rank, location_zone, phone_num, address) VALUES ('%s','%s','%s','%s', '%s','%s', '%s');",
+            name, age, gender, rank, location_zone, phone_num, address, " ");
+        PreparedStatement p = this.connection.prepareStatement(query);
+        p.executeUpdate();
+        // return readUserByField("email", email);
+      }
+    } 
+    catch (Exception e) {
+      System.out.println(e);
+      return null;
+    }
   }
 
-  public Army_schema updateArmyStorage(int ID_index, String name, String age, String rank, String gender,
-      String location_zone, String phone_num, String address) {
+  public Army_schema getArmyByIdStorage(String id,int ID_index) {
 
-    // System.out.println("why ur NOT running");
-    return linkedList.get(ID_index).updateArmyDetails(name, age, gender, rank, location_zone, phone_num, address);
+  }
+
+  public Army_schema updateArmyStorage(int ID_index, String name, String age, String rank, String gender, String location_zone, String phone_num, String address) {
+
+    // if (ID_index.isBlank())
+      // return null;
+    String query = String.format("UPDATE users SET %s %s %s %s WHERE id='%d'",
+        !name.isBlank() ? "name=" + "'" + name + "'," : "", !age.isBlank() ? "age=" + "'" + age + "'," : "",
+        !rank.isBlank() ? "rank=" + "'" + rank + "'," : "", !gender.isBlank() ? "gender=" + "'" + gender + "'" : "",
+        !location_zone.isBlank() ? "location_zone=" + "'" + location_zone + "'" : "",
+        !phone_num.isBlank() ? "phone_num=" + "'" + phone_num + "'" : "",
+        !address.isBlank() ? "address=" + "'" + address + "'" : "", ID_index);
+
+    // Utils.execUpdate(this.connection, query);
+    PreparedStatement q = this.connection.prepareStatement(query);
+    ResultSet res = q.executeQuery();
+    return getArmyByIdStorage("id ", ID_index);
+
   }
 
   public Army_schema deleteArmyStorage(int index) {
-    return linkedList.remove(index);
+    String query = String.format("DELETE FROM users WHERE id='%d'", index);
+    PreparedStatement q = this.connection.prepareStatement(query);
+    ResultSet res = q.executeQuery();
   }
 
-  public void getAllArmyStorage() {
-    int len = linkedList.size(), i;
+  /*
+   * public void getAllArmyStorage() { int len = linkedList.size(), i;
+   * 
+   * System.out.println("Length of LinkedList = " + len); for (i = 0; i < len;
+   * i++) { Army_schema troop = linkedList.get(i);
+   * System.out.println(troop.obj_show()); } }
+   */
 
-    System.out.println("Length of LinkedList = " + len);
-    for (i = 0; i < len; i++) {
-      Army_schema troop = linkedList.get(i);
-      System.out.println(troop.obj_show());
+  public Connection getcONN() {
+    try {
+      String driver = "com.mysql.cj.jdbc.Driver";
+      String url = "jdbc:mysql://remotemysql.com:3306/g1oPcnOToo";
+      String username = "g1oPcnOToo";
+      String password = "r1Xr9ZIIOv";
+      Class.forName(driver);
+
+      Connection conn = DriverManager.getcONN(url, username, password);
+      System.out.println("Connected");
+      return conn;
+    } catch (Exception e) {
+      System.out.println(e);
     }
+
+    return null;
   }
 
 }
