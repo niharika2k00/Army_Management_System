@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-
+// using linked list 
 public class linkedl_list_DB {
     
   LinkedList<Army_schema> linkedList = new LinkedList<Army_schema>(); // ll of the Army

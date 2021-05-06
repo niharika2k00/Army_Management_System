@@ -3,19 +3,24 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.io.*;
 import java.util.*;
 import java.util.LinkedList;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Scanner;
-
-import jdk.internal.foreign.Utils;
+import java.util.ArrayList;
+// import jdk.internal.foreign.Utils;
 
 // MAIN PUBLIC CLASS CONTAINING void main()
 public class Army_Management_System {
 
   // ---------------- MAIN FUNCTION --------------
-  public static void main(String args[]) {
+  public static void main(String[] args) {
     Database DB = new Database();
+
+    DB.createArmyTable();
 
     Main_menu MENU = new Main_menu(DB);
     MENU.armyManagement_Menu();
@@ -36,7 +41,7 @@ class Main_menu {
   // ------------------ ALL METHODS/FUNCTION -------------------------
   public void createArmyRecord() {
     try {
-      String name, age, rank, gender, location_zone, phone_num, address;
+      String name, age, self_rank, gender, location_zone, phone_num, address;
 
       System.out.println("\n---- Creating Records for an Army:  ----");
       System.out.print("Enter Army name: ");
@@ -46,7 +51,7 @@ class Main_menu {
       System.out.print("Enter gender: ");
       gender = br.readLine();
       System.out.print("Enter rank: ");
-      rank = br.readLine();
+      self_rank = br.readLine();
       System.out.print("Enter duty (site)location: ");
       location_zone = br.readLine();
       System.out.print("Enter phone number: ");
@@ -54,14 +59,10 @@ class Main_menu {
       System.out.print("Enter address: ");
       address = br.readLine();
 
-      /*
-       * creating an OBJECT of Army_schema--- this will trigger the Army_schema
-       * constructor inside its CLASS army OBJ contains the details of the SIngle army
-       */
-      Army_schema army = new Army_schema(name, age, gender, rank, location_zone, phone_num, address);
-      // System.out.println(army.name);
-      System.out.println(army.tostring());
-      db.createArmyStorage(name, army); // pass -> dispaatch -> return stores the object
+      // System.out.println(army.tostring());
+      Army_schema newArmy = db.createArmyStorage(name, age, gender, self_rank, location_zone, phone_num, address); // pass
+                                                                                                                   // ->
+      System.out.println(newArmy.toString());
       System.out.println(ConsoleColors.GREEN_BOLD + "-----  Successfully Created Details ------" + ConsoleColors.RESET);
     }
 
@@ -71,12 +72,12 @@ class Main_menu {
   }
 
   public void getArmyById() {
-    int index;
+    String index;
     try {
       System.out.println("\n----  Army Details using Index : ----");
       System.out.print("Enter index of the Army: ");
-      index = scan.nextInt();
-      Army_schema army = db.getArmyByIdStorage(index);
+      index = br.readLine();
+      Army_schema army = db.getArmyByIdStorage("ID", index);
       System.out.println(army.obj_show());
       System.out.println(ConsoleColors.GREEN_BOLD + "-----  Successfully Fetched Details of Army " + index + " ------"
           + ConsoleColors.RESET);
@@ -88,13 +89,13 @@ class Main_menu {
   }
 
   public void updateArmyDetails() {
+
     try {
-      String name, age, rank, gender, location_zone, phone_num, address;
-      int index;
+      String name, age, rank, gender, location_zone, phone_num, address, ID;
 
       System.out.println("\n---- Update Army Details:  ----");
       System.out.print("Enter Index of the Army for Updation: ");
-      index = scan.nextInt();
+      ID = br.readLine();
       System.out.print("Enter Army name: ");
       name = br.readLine();
       System.out.print("Enter Updated age: ");
@@ -110,12 +111,9 @@ class Main_menu {
       System.out.print("Enter Updated address: ");
       address = br.readLine();
 
-      // Army_schema army;
-      // normal variable of Army_schema type
-      Army_schema updateTroop = db.updateArmyStorage(index, name, age, rank, gender, location_zone, phone_num, address);
+      Army_schema updateTroop = db.updateArmyStorage(ID, name, age, rank, gender, location_zone, phone_num, address);
       System.out.println(updateTroop.obj_show());
       System.out.println(ConsoleColors.GREEN_BOLD + "-----  Successfully Updated Details ------" + ConsoleColors.RESET);
-
     } catch (Exception e) {
       System.out.println(e);
     }
@@ -123,27 +121,33 @@ class Main_menu {
 
   public void deleteArmyDetails() {
     try {
-      int index;
-
+      String ID;
       System.out.println("\n---- Delete Army Details:  ----");
       System.out.print("Enter Index of the Army for Deletion: ");
-      index = scan.nextInt();
-      db.deleteArmyStorage(index);
+      ID = br.readLine();
+      db.deleteArmyStorage(ID);
       System.out.println(
-          ConsoleColors.GREEN_BOLD + "-----  Successfully Created Details " + index + " ------" + ConsoleColors.RESET);
+          ConsoleColors.GREEN_BOLD + "-----  Successfully Created Details " + ID + " ------" + ConsoleColors.RESET);
     }
 
     catch (Exception e) {
       System.out.println(e);
     }
-
   }
 
   public void fetchAllArmyDetails() {
-    System.out.println("\n---- Fetch All Army Details:  ----");
-    db.getAllArmyStorage();
-    System.out.println(
-        ConsoleColors.GREEN_BOLD + "-----  Successfully Display All Army Details  ------" + ConsoleColors.RESET);
+    try {
+      System.out.println("\n---- Fetch All Army Details:  ----\n");
+
+      ArrayList<Army_schema> armies = db.getAllArmyStorage();
+      armies.forEach((element) -> System.out.println(element.toString()));
+
+      System.out.println(
+          ConsoleColors.GREEN_BOLD + "-----  Successfully Display All Army Details  ------" + ConsoleColors.RESET);
+
+    } catch (Exception e) {
+      System.out.println(e);
+    }
   }
 
   // Menu Driven --- Switch_Case
@@ -206,38 +210,30 @@ class Main_menu {
 // MAIN VARIABLES DECLARED FOR STRUCTURE
 class Army_schema {
 
-  static int userUID = 0;
-
   // instance variables
-  String ID;
-  static int index = 0;
+  String id;
   String name;
   String age;
   String gender;
-  String rank;
+  String self_rank;
   String location_zone;
   String phone_num;
   String address;
 
   // object of the class created using CONSTRUCTOR
-  Army_schema(String name, String age, String gender, String rank, String location_zone, String phone_num,
-      String address) {
-    this.ID = self_generateUID();
-    Army_schema.index = index++;
+  Army_schema(String id, String name, String age, String gender, String self_rank, String location_zone,
+      String phone_num, String address) {
+    this.id = id;
     this.name = name;
     this.age = age; // local variable --> inside the METHOD
     this.gender = gender;
-    this.rank = rank;
+    this.self_rank = self_rank;
     this.location_zone = location_zone;
     this.phone_num = phone_num;
     this.address = address;
   }
 
-  public String ArmyId() {
-    return this.ID;
-  }
-
-  public Army_schema updateArmyDetails(String NAME, String AGE, String GENDER, String RANK, String DUTY_SITE,
+  public Army_schema updateArmyDetails(String NAME, String AGE, String GENDER, String SELF_RANK, String DUTY_SITE,
       String PHONE, String ADDRESS) {
     if (!NAME.isBlank())
       name = NAME;
@@ -245,8 +241,8 @@ class Army_schema {
       age = AGE;
     if (!GENDER.isBlank())
       gender = GENDER;
-    if (!RANK.isBlank())
-      rank = RANK;
+    if (!SELF_RANK.isBlank())
+      SELF_RANK = self_rank;
     if (!DUTY_SITE.isBlank())
       location_zone = DUTY_SITE;
     if (!PHONE.isBlank())
@@ -256,18 +252,14 @@ class Army_schema {
     return this;
   }
 
-  public String self_generateUID() {
-    return "army" + userUID++;
-  }
-
-  public String tostring() {
-    return (this.ID + ", " + this.name + ", " + this.age + ", " + this.gender + ", " + this.rank + ", "
+  public String toString() {
+    return (this.id + ", " + this.name + ", " + this.age + ", " + this.gender + ", " + this.self_rank + ", "
         + this.location_zone + ", " + this.phone_num + ", " + this.address);
   }
 
   public String obj_show() {
-    return ("ID : " + this.ID + "\t" + "Name : " + this.name + "\t" + "Age : " + this.age + "\t" + "Gender : "
-        + this.gender + "\t" + "Rank : " + this.rank + "\t" + "Location of Duty : " + this.location_zone + "\t"
+    return ("ID : " + this.id + "\t" + "Name : " + this.name + "\t" + "Age : " + this.age + "\t" + "Gender : "
+        + this.gender + "\t" + "Rank : " + this.self_rank + "\t" + "Location of Duty : " + this.location_zone + "\t"
         + "Phone : " + this.phone_num + "\t" + "Address : " + this.address + "\n");
   }
 }
@@ -275,17 +267,17 @@ class Army_schema {
 // DATABASE -- using Linked List
 class Database {
 
-  private Connection connection;
+  private Connection CONN;
   static int index = 0;
 
   Database() {
-    this.connection = getcONN();
+    this.CONN = getConnection();
   }
 
-  public void createUsersTable() {
+  public void createArmyTable() {
     try {
-      String query = "CREATE TABLE IF NOT EXISTS users(id int NOT NULL AUTO_INCREMENT, name varchar(255), age varchar(255), gender varchar(255), rank varchar(255), location varchar(255),phone varchar(255), address varchar(255),PRIMARY KEY(id))";
-      PreparedStatement q = this.connection.prepareStatement(query);
+      String query = "CREATE TABLE IF NOT EXISTS users(id int NOT NULL AUTO_INCREMENT, name varchar(255), age varchar(255), gender varchar(255), self_rank varchar(255), location_zone varchar(255),phone_num varchar(255), address varchar(255),PRIMARY KEY(id))";
+      PreparedStatement q = this.CONN.prepareStatement(query);
       q.executeUpdate();
 
     } catch (Exception e) {
@@ -293,8 +285,7 @@ class Database {
     }
   }
 
-  // Methods For Data Manupulation using LL
-  public Army_schema createArmyStorage(String name, String age, String gender, String rank, String location_zone,
+  public Army_schema createArmyStorage(String name, String age, String gender, String self_rank, String location_zone,
       String phone_num, String address) {
 
     try {
@@ -302,27 +293,43 @@ class Database {
         return null;
       else {
         String query = String.format(
-            "INSERT INTO users(name,age , gender, rank, location_zone, phone_num, address) VALUES ('%s','%s','%s','%s', '%s','%s', '%s');",
-            name, age, gender, rank, location_zone, phone_num, address, " ");
-        PreparedStatement p = this.connection.prepareStatement(query);
+            "INSERT INTO users(name,age , gender, self_rank, location_zone, phone_num, address) VALUES ('%s','%s','%s','%s', '%s','%s', '%s');",
+            name, age, gender, self_rank, location_zone, phone_num, address, " ");
+        PreparedStatement p = this.CONN.prepareStatement(query);
         p.executeUpdate();
-        // return readUserByField("email", email);
+        return getArmyByIdStorage("name", name);
       }
-    } 
-    catch (Exception e) {
+    } catch (Exception e) {
       System.out.println(e);
       return null;
     }
   }
 
-  public Army_schema getArmyByIdStorage(String id,int ID_index) {
-
+  public Army_schema getArmyByIdStorage(String id, String ID_index) {
+    try {
+      String query = String.format("SELECT * FROM users WHERE %s='%s'", id, ID_index);
+      PreparedStatement q = CONN.prepareStatement(query);
+      ResultSet res = q.executeQuery();
+      while (res.next()) {
+        Army_schema army = new Army_schema(res.getString("id"), res.getString("name"), res.getString("age"),
+            res.getString("gender"), res.getString("self_rank"), res.getString("location_zone"),
+            res.getString("phone_num"), res.getString("address"));
+        System.out.println("army name == " + army.name);
+        return army;
+      }
+      return null;
+    } catch (Exception e) {
+      System.out.println(e);
+      return null;
+    }
   }
 
-  public Army_schema updateArmyStorage(int ID_index, String name, String age, String rank, String gender, String location_zone, String phone_num, String address) {
+  public Army_schema updateArmyStorage(String ID_index, String name, String age, String rank, String gender,
+      String location_zone, String phone_num, String address) throws SQLException {
 
-    // if (ID_index.isBlank())
-      // return null;
+    if (ID_index.isBlank())
+      return null;
+
     String query = String.format("UPDATE users SET %s %s %s %s WHERE id='%d'",
         !name.isBlank() ? "name=" + "'" + name + "'," : "", !age.isBlank() ? "age=" + "'" + age + "'," : "",
         !rank.isBlank() ? "rank=" + "'" + rank + "'," : "", !gender.isBlank() ? "gender=" + "'" + gender + "'" : "",
@@ -330,37 +337,51 @@ class Database {
         !phone_num.isBlank() ? "phone_num=" + "'" + phone_num + "'" : "",
         !address.isBlank() ? "address=" + "'" + address + "'" : "", ID_index);
 
-    // Utils.execUpdate(this.connection, query);
-    PreparedStatement q = this.connection.prepareStatement(query);
-    ResultSet res = q.executeQuery();
-    return getArmyByIdStorage("id ", ID_index);
-
+    PreparedStatement q = CONN.prepareStatement(query);
+    q.executeUpdate();
+    return getArmyByIdStorage("id", ID_index);
   }
 
-  public Army_schema deleteArmyStorage(int index) {
-    String query = String.format("DELETE FROM users WHERE id='%d'", index);
-    PreparedStatement q = this.connection.prepareStatement(query);
-    ResultSet res = q.executeQuery();
+  public void deleteArmyStorage(String id) {
+    try {
+      String query = String.format("DELETE FROM users WHERE id='%s'", id);
+      PreparedStatement q = CONN.prepareStatement(query);
+      q.executeUpdate();
+    } catch (Exception e) {
+      System.out.println(e);
+    }
   }
 
-  /*
-   * public void getAllArmyStorage() { int len = linkedList.size(), i;
-   * 
-   * System.out.println("Length of LinkedList = " + len); for (i = 0; i < len;
-   * i++) { Army_schema troop = linkedList.get(i);
-   * System.out.println(troop.obj_show()); } }
-   */
+  public ArrayList<Army_schema> getAllArmyStorage() {
+    ArrayList<Army_schema> ARMIES = new ArrayList<Army_schema>();
+    try {
+      String query = "SELECT * from users";
+      PreparedStatement q = CONN.prepareStatement(query);
+      ResultSet res = q.executeQuery();
+      while (res.next()) {
+        Army_schema single_army = new Army_schema(res.getString("id"), res.getString("name"), res.getString("age"),
+            res.getString("gender"), res.getString("self_rank"), res.getString("location_zone"),
+            res.getString("phone_num"), res.getString("address"));
 
-  public Connection getcONN() {
+        ARMIES.add(single_army);
+      }
+      return ARMIES;
+    } catch (Exception e) {
+      System.out.println(e);
+      return ARMIES;
+    }
+  }
+
+  public Connection getConnection() {
     try {
       String driver = "com.mysql.cj.jdbc.Driver";
-      String url = "jdbc:mysql://remotemysql.com:3306/g1oPcnOToo";
-      String username = "g1oPcnOToo";
-      String password = "r1Xr9ZIIOv";
+      String url = "jdbc:mysql://remotemysql.com:3306/gzvnRBxYho";
+      String username = "gzvnRBxYho";
+      String password = "R4JFnJGxgF";
       Class.forName(driver);
 
-      Connection conn = DriverManager.getcONN(url, username, password);
-      System.out.println("Connected");
+      Connection conn = DriverManager.getConnection(url, username, password);
+      System.out.println("SQL Database Connected Successfully");
       return conn;
     } catch (Exception e) {
       System.out.println(e);
