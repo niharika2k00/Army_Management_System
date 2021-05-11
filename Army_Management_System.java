@@ -62,7 +62,7 @@ class Main_menu {
       // System.out.println(army.tostring());
       Army_schema newArmy = db.createArmyStorage(name, age, gender, self_rank, location_zone, phone_num, address); // pass
                                                                                                                    // ->
-      System.out.println(newArmy.toString());
+      System.out.println(newArmy.obj_show());
       System.out.println(ConsoleColors.GREEN_BOLD + "-----  Successfully Created Details ------" + ConsoleColors.RESET);
     }
 
@@ -140,7 +140,7 @@ class Main_menu {
       System.out.println("\n---- Fetch All Army Details:  ----\n");
 
       ArrayList<Army_schema> armies = db.getAllArmyStorage();
-      armies.forEach((element) -> System.out.println(element.toString()));
+      armies.forEach((element) -> System.out.println(element.obj_show()));
 
       System.out.println(
           ConsoleColors.GREEN_BOLD + "-----  Successfully Display All Army Details  ------" + ConsoleColors.RESET);
@@ -314,7 +314,7 @@ class Database {
         Army_schema army = new Army_schema(res.getString("id"), res.getString("name"), res.getString("age"),
             res.getString("gender"), res.getString("self_rank"), res.getString("location_zone"),
             res.getString("phone_num"), res.getString("address"));
-        System.out.println("army name == " + army.name);
+        System.out.println("\nArmy Name : " + army.name);
         return army;
       }
       return null;
